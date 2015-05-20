@@ -20,6 +20,7 @@ package org.openchai.demo.mllib
 
 import java.util.Date
 
+import org.apache.spark.mllib.optimization._
 import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.util.Random
@@ -38,8 +39,9 @@ object  LBFGSRunner {
     val sconf = new SparkConf()
       .set("test.num.points", "" + numPoints)
        .set("spark.cores.max", ""+maxCores)
+    .set("spark.io.compression.codec", "lz4")
     val sc = new SparkContext(master, getClass.getSimpleName, sconf)
-    println(s"num points=${sc.conf.get("test.num.points")}")
+    println(s"num points=${sc.getConf.get("test.num.points")}")
     run(sc)
   }
 
@@ -69,7 +71,7 @@ object  LBFGSRunner {
 
   def run(sc: SparkContext) = {
 //    val nPoints = Integer.parseInt(Option(System.getProperty("test.num.points")).getOrElse("10000"))
-    val nPoints = Integer.parseInt(Option(sc.conf.get("test.num.points")).getOrElse("10000"))
+    val nPoints = Integer.parseInt(Option(sc.getConf.get("test.num.points")).getOrElse("10000"))
     val sdate = new Date
     System.err.println(s"Starting test at ${sdate.toString}")
     System.err.println(s"npoints=$nPoints")
@@ -95,8 +97,6 @@ object  LBFGSRunner {
     lazy val dataRDD = sc.parallelize(data, 2).cache()
 
     System.err.println("LBFGS loss should be decreasing and match the result of Gradient Descent.")
-    sc.conf.set("spark.io.compression.codec", "lz4")
-    System.err.println(s"Codec set to ${sc.conf.get("spark.io.compression.codec")}")
     val regParam = 0
 
     val initialWeightsWithIntercept = Vectors.dense(1.0 +: initialWeights.toArray)
